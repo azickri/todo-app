@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.6.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <title>ToDo App</title>
+</head>
+<body>
+  <center>
+    <div class='container w-full mt-5'>
+      <div class='text-2xl'>
+        ToDo App
+      </div>
+  
+      <div class='mt-2 lg:p-0 p-2'>
+        <div class='lg:w-[50%] w-full'>
+          <hr class='mb-5'>
+          <div class='flex justify-between items-center' id='header-todo'>
+            <div>
+              Buat ToDo dan Kerjakan!
+            </div>
+            <div>
+              <button class='btn btn-info btn-sm' onclick="modalAddTodo.showModal()">Tambah</button>
+            </div>
+          </div>
+
+          <div class='flex flex-col border rounded-sm mt-5 p-3 gap-3' id='todos'>
+            <!-- Content Here -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </center>
+
+  <dialog id="modalAddTodo" class="modal">
+    <div class="modal-box">
+      <h3 class="font-bold text-lg">Tambah ToDo</h3>
+      <div class='mt-3'>
+        <input type="text" id='input-add-todo' placeholder="Nama ToDo" class="input input-bordered w-full" />
+        <button class='btn btn-primary btn-sm btn-block mt-3' onclick='handleAddToDo()'>Simpan</button>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop"><button id='btn-close-modal'>close</button></form>
+  </dialog>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    function getTodos() {
+      const todos = JSON.parse(localStorage.getItem('todos') || '[]')
+      const elementTodos = document.getElementById('todos')
+
+      if(todos.length == 0) {
+        elementTodos.insertAdjacentHTML('afterbegin', '<div>Belum ada ToDo</div>')
+      }
+      
+      for(let i = 0; i < todos.length; i++) {
+        const { id, name, checked } = todos[i]
+        elementTodos.insertAdjacentHTML('afterbegin', generateComponentToDo(id, name, checked));
+      }
+    }
+
+    function generateComponentToDo(id, name, checked) {
+      const tagChecked = checked ? 'checked="checked"' : ''
+      const teksCheked = checked ? 'line-through' : ''
+
+      return `
+        <div class="flex justify-between">
+          <div class='flex justify-start gap-2'>
+            <div>
+              <input id="${id}" type="checkbox" ${tagChecked} class="checkbox" onchange="handleOnChangeCheckbox('${id}', '${checked}')" />
+            </div>
+            <label for="${id}" class="${teksCheked} text-left">${name}</label>
+          </div>
+          <div>
+            <button class='btn btn-error btn-sm' onclick="handleDeleteTodo('${id}')">Hapus</button>
+          </div>
+        </div> 
+      `
+    }
+
+    function generateId(length) {
+      let result = '';
+      const characters =
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+      const charactersLength = characters.length;
+      for (let i = 0; i < 10; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+      }
+
+      return result;
+    }
+
+    function handleOnChangeCheckbox(id, checked) {
+      checked = checked == 'true' ? true : false
+      const todos = JSON.parse(localStorage.getItem('todos') || '[]')
+      const todoIndex = todos.findIndex((todo) => todo.id == id)
+      if(todoIndex != -1) {
+        todos[todoIndex].checked = !checked
+        localStorage.setItem('todos', JSON.stringify(todos))
+        resetToDoList()
+      }
+    }
+
+    function handleAddToDo() {
+      const value = document.getElementById('input-add-todo').value
+      if(!value) return
+      
+      const todos = JSON.parse(localStorage.getItem('todos') || '[]')
+      todos.push({id: generateId(), name: value, checked: false})
+      localStorage.setItem('todos', JSON.stringify(todos))
+
+      closeModal()
+      resetToDoList()
+      document.getElementById('input-add-todo').value = ''
+    }
+
+    function handleDeleteTodo(id) {
+      const todos = JSON.parse(localStorage.getItem('todos') || '[]')
+      const todoIndex = todos.findIndex((todo) => todo.id == id)
+      if(todoIndex != -1) {
+        const newTodos = todos.filter((todo) => todo.id != id)
+        localStorage.setItem('todos', JSON.stringify(newTodos))
+        resetToDoList()
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('btn-close-modal').click()
+    }
+
+    function resetToDoList() {
+      document.getElementById('todos').remove()
+      document.getElementById('header-todo').insertAdjacentHTML('afterend', `<div class='flex flex-col border rounded-sm mt-5 p-3 gap-3' id='todos'></div>`)
+      getTodos()
+    }
+
+    getTodos()
+  </script>
+</body>
+</html>
